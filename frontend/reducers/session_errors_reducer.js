@@ -1,14 +1,15 @@
-const _nullErrors = [];
+import {
+  RECEIVE_SESSION_ERRORS,
+  RECEIVE_CURRENT_USER,
+} from '../actions/session_actions';
 
-export default (state = _nullErrors, action) => {
+export default (state = [], action) => {
   Object.freeze(state);
-  switch(action.type) {
+  switch (action.type) {
     case RECEIVE_SESSION_ERRORS:
       return action.errors;
     case RECEIVE_CURRENT_USER:
-      return _nullErrors;
-    case CLEAR_ERRORS:
-      return _nullErrors;
+      return [];
     default:
       return state;
   }

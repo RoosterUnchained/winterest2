@@ -14,78 +14,87 @@
 
 
 class User < ApplicationRecord
-  validates :email, :session_token, :username, presence: true, uniqueness: true
-	validates :password_digest, :img_url, :player_url, :elo_rating, presence: true
+  validates :session_token, :username, presence: true, uniqueness: true
+	validates :password_digest, presence: true
 	validates :password, length: {minimum: 6}, allow_nil: true
+
 	after_initialize :ensure_session_token 
+	
 	attr_reader :password
 
-	has_many :books,
-		primary_key: :id,
-		foreign_key: :author_id,
-		class_name: 'Book'
+	# has_many :books,
+	# 	primary_key: :id,
+	# 	foreign_key: :author_id,
+	# 	class_name: 'Book'
 
-	has_many :studies,
-		primary_key: :id,
-    foreign_key: :student_id,
-		class_name: 'Study'
+	# has_many :studies,
+	# 	primary_key: :id,
+  #   foreign_key: :student_id,
+	# 	class_name: 'Study'
 		
-	has_many :reads,
-		primary_key: :id,
-    foreign_key: :student_id,
-    class_name: 'Read'
+	# has_many :reads,
+	# 	primary_key: :id,
+  #   foreign_key: :student_id,
+  #   class_name: 'Read'
 
-  has_many :read_books,
-    through: :reads,
-    source: :book
+  # has_many :read_books,
+  #   through: :reads,
+  #   source: :book
   
-  has_many :notes,
-		primary_key: :id,
-    foreign_key: :author_id,
-    class_name: 'Note'
+  # has_many :notes,
+	# 	primary_key: :id,
+  #   foreign_key: :author_id,
+  #   class_name: 'Note'
   
-  has_many :authored_moves,
-		primary_key: :id,
-    foreign_key: :author_id,
-    class_name: 'Move'
+  # has_many :authored_moves,
+	# 	primary_key: :id,
+  #   foreign_key: :author_id,
+  #   class_name: 'Move'
     
-  has_many :studied_moves,
-		primary_key: :id,
-    foreign_key: :student_id,
-    class_name: 'Move'
+  # has_many :studied_moves,
+	# 	primary_key: :id,
+  #   foreign_key: :student_id,
+  #   class_name: 'Move'
     
 		
-	def self.generate_session_token
-		SecureRandom::urlsafe_base64
-	end
 
-	def ensure_session_token
-		self.session_token ||= User.generate_session_token
-	end
-
-	def reset_session_token!
-		self.session_token = User.generate_session_token
-		self.save!
-		self.session_token
-	end
-
-	def self.find_by_credentials(email, password)
-		user = User.find_by(email: email)
-		if user && user.is_password?(password)
-			user
-		else
-			nil
-		end
-	end
+	def self.find_by_credentials(username, password)
+    user = User.find_by(username: username)
+    return nil unless user
+    user.is_password?(password) ? user : nil
+  end
 		
 	def password=(password)
 		@password = password
 		self.password_digest = BCrypt::Password.create(password)
 	end
 
+	def reset_session_token!
+    generate_unique_session_token
+    save!
+    self.session_token
+  end
+
 	def is_password?(password)
 		BCrypt::Password.new(self.password_digest).is_password?(password)
-
 	end
+
+	private
+
+  def ensure_session_token
+    generate_unique_session_token unless self.session_token
+  end
+
+  def new_session_token
+    SecureRandom.urlsafe_base64
+  end
+
+  def generate_unique_session_token
+    self.session_token = new_session_token
+    while User.find_by(session_token: self.session_token)
+      self.session_token = new_session_token
+    end
+    self.session_token
+  end
 
 end
