@@ -1,29 +1,25 @@
 class Api::SessionsController < ApplicationController
   def create
-    # signs a user in
     @user = User.find_by_credentials(
       params[:user][:username],
       params[:user][:password]
     )
 
-    if @user.nil?
-      # no user with the given name!
-      render :new
+    if @user
+      login!(@user)
+      render "api/users/show"
     else
-      # sign the user in
-      log_in!(@user)
-      redirect_to user_url
+      render json: ["Invalid username/password combination"], status: 401
     end
   end
 
   def destroy
-    # sign a user out
-    log_out!
-    redirect_to new_session_url
-  end
-
-  def new
-    # presents a login form
-    render :new
+    @user = current_user
+    if @user
+      logout
+      render "api/users/show"
+    else
+      render json: ["Nobody signed in"], status: 404
+    end
   end
 end
