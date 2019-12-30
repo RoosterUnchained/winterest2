@@ -1,7 +1,9 @@
 <main id="root"></main>
 
 <script type="text/javascript">
-  window.currentUser = { id: 3, username: "sennecy_the_cat" };
+<% if current_user %>
+  window.currentUser = <%= current_user.id %>
+<% end %>
+
 </script>
 
-<main id="root"></main>
